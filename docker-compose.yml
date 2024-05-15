@@ -234,7 +234,7 @@ services:
       - 15672:15672
 
   worker:
-    build: ./docker/celery_worker/
+    build: .
     tty: true
     environment:
       - PYTHONPATH=/app/src
