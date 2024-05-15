@@ -21,7 +21,7 @@ networks:
 
 services:
   setup:
-    build: ./docker/es/
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
     user: "0"
@@ -79,14 +79,7 @@ services:
     depends_on:
       setup:
         condition: service_healthy
-    build: ./docker/es/
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     labels:
       co.elastic.logs/module: elasticsearch
     volumes:
@@ -236,6 +229,13 @@ services:
   worker:
     build: .
     tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     environment:
       - PYTHONPATH=/app/src
       - RABBITMQ_HOST=rabbitmq:5672

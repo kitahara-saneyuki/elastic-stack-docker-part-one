@@ -8,5 +8,6 @@ dependencies:
   - celery
   - ipykernel
   - pip
+  - langchain
   - pip:
     - eland[pytorch]
