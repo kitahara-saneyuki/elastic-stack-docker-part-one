@@ -7,6 +7,7 @@ from elasticsearch import Elasticsearch, helpers
 
 ES_HOST = "https://es01:9200/"
 ES_PASS = "y5AADXZR0l63CvTz1AsWznNiAM1Ukq7KSd3MEra"
+CHUNK_SIZE = 200
 
 client = Elasticsearch(
     # For local development
@@ -14,6 +15,20 @@ client = Elasticsearch(
     basic_auth=('elastic', ES_PASS), 
     verify_certs=False
 )
+
+
+def agg_sentences(sentences):
+    ret = []
+    chunk = ""
+    for sentence in sentences:
+        if len(chunk) < CHUNK_SIZE:
+            chunk += sentence
+        else:
+            ret.append(chunk)
+            chunk = ""
+    if chunk:
+        ret.append(chunk)
+    return ret
 
 
 @celery_app.task(
@@ -34,7 +49,7 @@ def ingest_data(self, **kwargs):
                     "is_truncated": False,
                     "model_id": "baai__bge-large-zh-v1.5"
                 },
-            }, [sentence for sentence in re.split('(?<=[。！？…])', doc["text"]) if len(sentence) > 0]))
+            }, [sentence for sentence in agg_sentences(re.split('(?<=[。！？…])', doc["text"])) if len(sentence) > 0]))
         },
         kwargs["docs"]
     ))

@@ -9,5 +9,8 @@ dependencies:
   - ipykernel
   - pip
   - langchain
+  - openai
+  - streamlit
+  - nltk
   - pip:
     - eland[pytorch]
