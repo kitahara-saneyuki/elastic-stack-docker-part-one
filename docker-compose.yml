@@ -229,10 +229,17 @@ services:
   worker:
     build: .
     tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     environment:
       - PYTHONPATH=/app/src
       - RABBITMQ_HOST=rabbitmq:5672
     working_dir: /app/src
-    entrypoint: ../docker/celery_worker.sh
+    entrypoint: ../docker/celery_worker/celery_worker.sh
     volumes:
       - .:/app

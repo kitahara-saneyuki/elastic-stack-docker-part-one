@@ -1,0 +1,4 @@
+[submodule "french_revo"]
+	path = french_revo
+	url = git@github.com:kitahara-saneyuki/french_revo.git
+    branch = 4_chatbot
