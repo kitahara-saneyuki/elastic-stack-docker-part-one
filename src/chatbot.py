@@ -55,16 +55,17 @@ def rag_get(question):
 
 def api_calling(prompt):
     rag_responses = rag_get(prompt)
+    print(rag_responses)
     msg = [  # Change the prompt parameter to messages parameter
         {"role": "assistant", "content": rag_response} for rag_response in rag_responses
     ]
     msg += [{"role": "user", "content": prompt}]
     completions = client.chat.completions.create(  # Change the method
         model="gpt-4",
-        messages=msg,
+        messages=[{"role": "user", "content": prompt}],
+        stream=True,
     )
-    message = completions.choices[0].message.content
-    return message
+    return completions
 
 
 if "user_input" not in st.session_state:
@@ -83,11 +84,11 @@ user_input = get_text()
 
 if user_input:
     output = api_calling(user_input)
-    output = output.lstrip("\n")
 
     # Store the output
     st.session_state.openai_response.append(user_input)
-    st.session_state.user_input.append(output)
+    response = st.write_stream(output)
+    st.session_state.user_input.append(response)
 
 message_history = st.empty()
 
