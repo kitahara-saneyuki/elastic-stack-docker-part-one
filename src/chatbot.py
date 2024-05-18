@@ -31,7 +31,8 @@ es_client = Elasticsearch(
     verify_certs=False,
 )
 print(es_client.info())
-st.title("ChatGPT ChatBot With Streamlit and OpenAI")
+
+st.title("法国大革命历史问答机器人")
 
 
 def rag_get(question):
@@ -54,52 +55,37 @@ def rag_get(question):
 
 
 def api_calling(prompt):
-    rag_responses = rag_get(prompt)
-    print(rag_responses)
-    msg = [  # Change the prompt parameter to messages parameter
-        {"role": "assistant", "content": rag_response} for rag_response in rag_responses
-    ]
-    msg += [{"role": "user", "content": prompt}]
     completions = client.chat.completions.create(  # Change the method
         model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
+        messages=msg,
         stream=True,
     )
     return completions
 
 
-if "user_input" not in st.session_state:
-    st.session_state["user_input"] = []
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-4"
 
-if "openai_response" not in st.session_state:
-    st.session_state["openai_response"] = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-def get_text():
-    input_text = st.text_input("write here", key="input")
-    return input_text
-
-
-user_input = get_text()
-
-if user_input:
-    output = api_calling(user_input)
-
-    # Store the output
-    st.session_state.openai_response.append(user_input)
-    response = st.write_stream(output)
-    st.session_state.user_input.append(response)
-
-message_history = st.empty()
-
-if st.session_state["user_input"]:
-    for i in range(len(st.session_state["user_input"]) - 1, -1, -1):
-        # This function displays user input
-        message(st.session_state["user_input"][i], key=str(i), avatar_style="icons")
-        # This function displays OpenAI response
-        message(
-            st.session_state["openai_response"][i],
-            avatar_style="miniavs",
-            is_user=True,
-            key=str(i) + "data_by_user",
+if prompt := st.chat_input("What is up?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    rag_responses = rag_get(prompt)
+    msg = [  # Change the prompt parameter to messages parameter
+        {"role": "assistant", "content": rag_response} for rag_response in rag_responses
+    ]
+    msg += [{"role": "user", "content": prompt}]
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=msg,
+            stream=True,
         )
+        response = st.write_stream(stream)
